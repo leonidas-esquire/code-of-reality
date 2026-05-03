@@ -27,14 +27,12 @@ git config user.name "Replit Sync"
 git remote remove github 2>/dev/null || true
 git remote add github "https://${GITHUB_PAT}@github.com/leonidas-esquire/code-of-reality.git"
 
-# Use a standard (non-force) push. Replit is the single source of truth for
-# this repository; if the push fails due to divergence it means the GitHub
-# remote received commits outside this sync path — resolve by rebasing
-# GitHub's commits onto the Replit branch before the next merge.
-if git push github HEAD:main; then
+# Force push — Replit is the single source of truth. Any commits pushed
+# directly to GitHub outside of Replit will be overwritten.
+if git push --force github HEAD:main; then
   echo "Successfully synced to GitHub."
 else
-  echo "ERROR: GitHub push failed. The remote may have diverged. Check github.com/leonidas-esquire/code-of-reality and ensure no commits were pushed directly to GitHub outside of Replit." >&2
+  echo "ERROR: GitHub push failed." >&2
   git remote remove github
   exit 1
 fi
