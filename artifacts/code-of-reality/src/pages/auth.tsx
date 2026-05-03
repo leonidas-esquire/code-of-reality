@@ -17,9 +17,9 @@ export default function AuthPage() {
 
   useEffect(() => {
     if (localStorage.getItem("cor_token")) {
-      setLocation("/");
+      window.location.replace("/");
     }
-  }, [setLocation]);
+  }, []);
   
   const loginMutation = useLoginUser();
   const registerMutation = useRegisterUser();

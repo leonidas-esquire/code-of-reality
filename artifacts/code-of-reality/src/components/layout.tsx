@@ -52,9 +52,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      setLocation("/auth");
+      // Clear any stale token so the auth page doesn't bounce back here.
+      localStorage.removeItem("cor_token");
+      window.location.replace("/auth");
     }
-  }, [isLoading, user, setLocation]);
+  }, [isLoading, user]);
 
   if (isLoading) {
     return (

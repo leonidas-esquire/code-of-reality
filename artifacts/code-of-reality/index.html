@@ -10,7 +10,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="pre-react-loader" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#020817;">
+        <span style="font-family:monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#d4af3780;animation:pulse 1.5s ease-in-out infinite;">Initializing…</span>
+      </div>
+    </div>
+    <style>#pre-react-loader{transition:opacity 0.2s}@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}</style>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
