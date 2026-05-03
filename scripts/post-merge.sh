@@ -27,9 +27,8 @@ git config user.name "Replit Sync"
 git remote remove github 2>/dev/null || true
 git remote add github "https://${GITHUB_PAT}@github.com/leonidas-esquire/code-of-reality.git"
 
-# Force push — Replit is the single source of truth. Any commits pushed
-# directly to GitHub outside of Replit will be overwritten.
-if git push --force github HEAD:main; then
+# Standard push — branch protection is enforced on GitHub's side.
+if git push github HEAD:main; then
   echo "Successfully synced to GitHub."
 else
   echo "ERROR: GitHub push failed." >&2
