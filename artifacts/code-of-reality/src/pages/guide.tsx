@@ -1,6 +1,9 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, Download, Hexagon, Lock, BookOpen } from "lucide-react";
+import { ArrowLeft, Download, Hexagon, Lock, BookOpen, CheckCircle2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import { useGetCurrentUser } from "@workspace/api-client-react";
 
 const GOLD = "#d4af37";
 const CLIP = "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))";
@@ -221,6 +224,43 @@ export default function GuidePage() {
   const active = useActiveSection(TOC_ITEMS.map((t) => t.id));
   const containerRef = useRef<HTMLDivElement>(null);
   const progress = useScrollProgress(containerRef);
+  const firedRef = useRef(false);
+  const { data: user } = useGetCurrentUser();
+
+  useEffect(() => {
+    if (progress < 100 || firedRef.current) return;
+    firedRef.current = true;
+    const hasStarted = user && (user.currentPhase ?? 1) > 1;
+    toast({
+      title: (
+        <span className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest" style={{ color: "#d4af37" }}>
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+          Guide Fully Transmitted
+        </span>
+      ) as unknown as string,
+      description: hasStarted
+        ? "You've absorbed the complete E₈ RealityMastery User Guide. Continue your transformation."
+        : "You've absorbed the complete E₈ RealityMastery User Guide. Your initiation awaits.",
+      action: (
+        <ToastAction
+          altText={hasStarted ? "Continue journey" : "Begin Phase 1"}
+          onClick={() => setLocation("/phases")}
+          style={{
+            border: "1px solid #d4af37",
+            color: "#d4af37",
+            background: "rgba(212,175,55,0.1)",
+            fontFamily: "monospace",
+            fontSize: "10px",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            borderRadius: 0,
+          }}
+        >
+          {hasStarted ? "Continue Journey →" : "Begin Phase 1 →"}
+        </ToastAction>
+      ),
+    });
+  }, [progress, user, setLocation]);
 
   const handleDownload = () => window.print();
 
