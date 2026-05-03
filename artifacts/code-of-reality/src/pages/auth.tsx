@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLoginUser, useRegisterUser } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,12 @@ export default function AuthPage() {
   
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (localStorage.getItem("cor_token")) {
+      setLocation("/");
+    }
+  }, [setLocation]);
   
   const loginMutation = useLoginUser();
   const registerMutation = useRegisterUser();
