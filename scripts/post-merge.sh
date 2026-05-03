@@ -28,12 +28,12 @@ git remote remove github 2>/dev/null || true
 git remote add github "https://${GITHUB_PAT}@github.com/leonidas-esquire/code-of-reality.git"
 
 # Standard push — branch protection is enforced on GitHub's side.
+# Non-fatal: if branches have diverged (e.g. commits added directly on GitHub),
+# log a warning but do not fail the post-merge setup.
 if git push github HEAD:main; then
   echo "Successfully synced to GitHub."
 else
-  echo "ERROR: GitHub push failed." >&2
-  git remote remove github
-  exit 1
+  echo "WARNING: GitHub push skipped — branches may have diverged. Resolve manually if needed." >&2
 fi
 
-git remote remove github
+git remote remove github 2>/dev/null || true
