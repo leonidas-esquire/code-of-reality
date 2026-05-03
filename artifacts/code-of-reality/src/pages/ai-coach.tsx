@@ -4,8 +4,17 @@ import { Cpu, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { PaywallGate } from "@/components/paywall-gate";
 
 export default function AiCoachPage() {
+  return (
+    <PaywallGate requiredTier="ARCHITECT" featureDescription="E₈ AI Reality Coach">
+      <AiCoachInner />
+    </PaywallGate>
+  );
+}
+
+function AiCoachInner() {
   const { data: conversations } = useListAnthropicConversations();
   const createConversation = useCreateAnthropicConversation();
   

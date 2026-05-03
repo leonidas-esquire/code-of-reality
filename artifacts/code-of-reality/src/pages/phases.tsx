@@ -3,10 +3,12 @@ import { E8Visualization } from "@/components/e8-visualization";
 import { Hexagon, Lock, Unlock } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
+import { useGetCurrentUser } from "@workspace/api-client-react";
 
 export default function PhasesPage() {
   const { data: phases, isLoading: phasesLoading } = useListPhases();
   const { data: currentPhase, isLoading: currentLoading } = useGetCurrentPhase();
+  const { data: user } = useGetCurrentUser();
 
   return (
     <div className="relative w-full h-full min-h-[calc(100vh-4rem)] flex flex-col">
@@ -27,9 +29,10 @@ export default function PhasesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {phases?.map((phase) => {
-              const isCurrent = currentPhase?.phase === phase.phase;
+              const isCurrent = currentPhase?.currentPhase === phase.phase;
               const isCompleted = phase.isCompleted;
               const isLocked = !phase.isUnlocked;
+              const needsSub = (phase as { requiresSubscription?: boolean }).requiresSubscription;
 
               return (
                 <div 
@@ -41,6 +44,14 @@ export default function PhasesPage() {
                     "bg-card/40 border-border/20 opacity-70 grayscale",
                   )}
                 >
+                  {needsSub && (
+                    <div className="absolute top-2 right-2">
+                      <Link href="/pricing" className="text-[9px] font-mono uppercase tracking-widest px-2 py-0.5 border border-yellow-500/50 text-yellow-400/80 bg-yellow-500/10 hover:bg-yellow-500/20 transition-colors">
+                        ARCHITECT
+                      </Link>
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-start mb-4">
                     <div className="w-10 h-10 border border-primary/50 flex items-center justify-center clip-corners bg-background/50">
                       <span className="font-serif text-xl text-primary">{phase.phase}</span>

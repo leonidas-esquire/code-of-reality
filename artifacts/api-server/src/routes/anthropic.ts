@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { eq, asc } from "drizzle-orm";
 import { db } from "../lib/db";
-import { conversations, messages } from "@workspace/db";
+import { conversations, messages, usersTable } from "@workspace/db";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 
@@ -15,7 +15,21 @@ Your communication style blends quantum physics precision with ancient wisdom. Y
 
 Keep responses focused, actionable, and potent. Avoid generic self-help language. Always ground insights in specific dimensions and measurable coherence work.`;
 
-/** Serialize a DB conversation row to match the OpenAPI Conversation schema (id as string, updatedAt present) */
+const TIER_ORDER = { FREE: 0, EXPLORER: 1, ARCHITECT: 2, CERTIFIED: 3 } as const;
+type Tier = keyof typeof TIER_ORDER;
+function hasTier(userTier: string, requiredTier: Tier): boolean {
+  return (TIER_ORDER[userTier as Tier] ?? 0) >= TIER_ORDER[requiredTier];
+}
+
+async function checkArchitectTier(userId: string): Promise<string | null> {
+  const [user] = await db.select({ subscriptionTier: usersTable.subscriptionTier })
+    .from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  if (!user || !hasTier(user.subscriptionTier, "ARCHITECT")) {
+    return user?.subscriptionTier ?? "FREE";
+  }
+  return null; // null = access granted
+}
+
 function serializeConversation(c: typeof conversations.$inferSelect) {
   return {
     id: String(c.id),
@@ -26,7 +40,6 @@ function serializeConversation(c: typeof conversations.$inferSelect) {
   };
 }
 
-/** Serialize a DB message row to match the OpenAPI Message schema (id and conversationId as strings) */
 function serializeMessage(m: typeof messages.$inferSelect) {
   return {
     id: String(m.id),
@@ -40,6 +53,16 @@ function serializeMessage(m: typeof messages.$inferSelect) {
 router.get("/anthropic/conversations", requireAuth, async (req, res) => {
   try {
     const { userId } = (req as AuthRequest).user;
+    const blockedTier = await checkArchitectTier(userId);
+    if (blockedTier !== null) {
+      res.status(403).json({
+        error: "SubscriptionRequired",
+        message: "AI Coach requires ARCHITECT tier or higher",
+        requiredTier: "ARCHITECT",
+        currentTier: blockedTier,
+      });
+      return;
+    }
     const list = await db.select().from(conversations)
       .where(eq(conversations.userId, userId))
       .orderBy(asc(conversations.createdAt));
@@ -53,6 +76,16 @@ router.get("/anthropic/conversations", requireAuth, async (req, res) => {
 router.post("/anthropic/conversations", requireAuth, async (req, res) => {
   try {
     const { userId } = (req as AuthRequest).user;
+    const blockedTier = await checkArchitectTier(userId);
+    if (blockedTier !== null) {
+      res.status(403).json({
+        error: "SubscriptionRequired",
+        message: "AI Coach requires ARCHITECT tier or higher",
+        requiredTier: "ARCHITECT",
+        currentTier: blockedTier,
+      });
+      return;
+    }
     const { title, context } = req.body ?? {};
     const [convo] = await db.insert(conversations)
       .values({ userId, title: title ?? "Reality Coaching Session" })
@@ -75,6 +108,12 @@ router.post("/anthropic/conversations", requireAuth, async (req, res) => {
 
 router.get("/anthropic/conversations/:id/messages", requireAuth, async (req, res) => {
   try {
+    const { userId } = (req as AuthRequest).user;
+    const blockedTier = await checkArchitectTier(userId);
+    if (blockedTier !== null) {
+      res.status(403).json({ error: "SubscriptionRequired", requiredTier: "ARCHITECT", currentTier: blockedTier });
+      return;
+    }
     const conversationId = parseInt(req.params.id);
     if (isNaN(conversationId)) { res.status(400).json({ error: "Invalid conversation ID" }); return; }
     const msgs = await db.select().from(messages)
@@ -89,6 +128,12 @@ router.get("/anthropic/conversations/:id/messages", requireAuth, async (req, res
 
 router.post("/anthropic/conversations/:id/messages", requireAuth, async (req, res) => {
   try {
+    const { userId } = (req as AuthRequest).user;
+    const blockedTier = await checkArchitectTier(userId);
+    if (blockedTier !== null) {
+      res.status(403).json({ error: "SubscriptionRequired", requiredTier: "ARCHITECT", currentTier: blockedTier });
+      return;
+    }
     const conversationId = parseInt(req.params.id);
     if (isNaN(conversationId)) { res.status(400).json({ error: "Invalid conversation ID" }); return; }
     const { content } = req.body;
@@ -126,7 +171,6 @@ router.post("/anthropic/conversations/:id/messages", requireAuth, async (req, re
     }
 
     await db.insert(messages).values({ conversationId, role: "assistant", content: fullResponse });
-    // Update conversation updatedAt
     await db.update(conversations).set({ updatedAt: new Date() }).where(eq(conversations.id, conversationId));
     res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     res.end();

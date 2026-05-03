@@ -21,6 +21,8 @@ import CommunityPage from "@/pages/community";
 import AnalyticsPage from "@/pages/analytics";
 import AiCoachPage from "@/pages/ai-coach";
 import AchievementsPage from "@/pages/achievements";
+import PricingPage from "@/pages/pricing";
+import BillingSuccessPage from "@/pages/billing-success";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +38,7 @@ function Router() {
     <Switch>
       <Route path="/auth" component={AuthPage} />
       <Route path="/onboarding" component={OnboardingPage} />
+      <Route path="/billing/success" component={BillingSuccessPage} />
       <Route path="/">
         <Layout>
           <Switch>
@@ -51,6 +54,7 @@ function Router() {
             <Route path="/analytics" component={AnalyticsPage} />
             <Route path="/ai-coach" component={AiCoachPage} />
             <Route path="/achievements" component={AchievementsPage} />
+            <Route path="/pricing" component={PricingPage} />
             <Route component={NotFound} />
           </Switch>
         </Layout>

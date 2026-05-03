@@ -14,7 +14,8 @@ import {
   BarChart, 
   Cpu, 
   Award,
-  LogOut
+  LogOut,
+  Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { name: "Analytics", href: "/analytics", icon: BarChart },
   { name: "AI Coach", href: "/ai-coach", icon: Cpu },
   { name: "Achievements", href: "/achievements", icon: Award },
+  { name: "Upgrade", href: "/pricing", icon: Zap },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

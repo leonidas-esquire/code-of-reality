@@ -15,6 +15,7 @@ import achievementsRouter from "./achievements";
 import communityRouter from "./community";
 import analyticsRouter from "./analytics";
 import anthropicRouter from "./anthropic";
+import billingRouter from "./billing";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(achievementsRouter);
 router.use(communityRouter);
 router.use(analyticsRouter);
 router.use(anthropicRouter);
+router.use(billingRouter);
 
 export default router;
