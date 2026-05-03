@@ -50,13 +50,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
     });
   };
 
+  useEffect(() => {
+    if (!isLoading && !user) {
+      setLocation("/auth");
+    }
+  }, [isLoading, user, setLocation]);
+
   if (isLoading) {
-    return <div className="h-screen w-full flex items-center justify-center">Loading reality matrix...</div>;
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-background">
+        <span className="font-mono text-xs tracking-widest uppercase text-primary/60 animate-pulse">
+          Initializing Reality Matrix…
+        </span>
+      </div>
+    );
   }
 
   if (!user) {
-    // If not logged in, just render children (auth page handles redirect)
-    return <>{children}</>;
+    return null;
   }
 
   return (
