@@ -1,11 +1,21 @@
 import { Router } from "express";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { db } from "../lib/db";
 import { forumThreadsTable, forumPostsTable, usersTable } from "@workspace/db";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { generateId } from "../lib/id";
 
 const router = Router();
+
+/** Add authorId alias to satisfy OpenAPI ForumThread schema */
+function serializeThread(t: typeof forumThreadsTable.$inferSelect) {
+  return { ...t, authorId: t.userId };
+}
+
+/** Add authorId alias to satisfy OpenAPI ForumPost schema */
+function serializePost(p: typeof forumPostsTable.$inferSelect) {
+  return { ...p, authorId: p.userId };
+}
 
 router.get("/community/threads", requireAuth, async (req, res) => {
   try {
@@ -18,7 +28,8 @@ router.get("/community/threads", requireAuth, async (req, res) => {
           .orderBy(desc(forumThreadsTable.lastActivityAt)).limit(limit)
       : await db.select().from(forumThreadsTable)
           .orderBy(desc(forumThreadsTable.lastActivityAt)).limit(limit);
-    res.json(threads);
+
+    res.json(threads.map(serializeThread));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -42,7 +53,6 @@ router.post("/community/threads", requireAuth, async (req, res) => {
       postCount: 1,
     }).returning();
 
-    // Create first post
     await db.insert(forumPostsTable).values({
       id: generateId(),
       threadId,
@@ -52,7 +62,7 @@ router.post("/community/threads", requireAuth, async (req, res) => {
       content,
     });
 
-    res.status(201).json(thread);
+    res.status(201).json(serializeThread(thread));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -65,7 +75,7 @@ router.get("/community/threads/:id/posts", requireAuth, async (req, res) => {
     const posts = await db.select().from(forumPostsTable)
       .where(eq(forumPostsTable.threadId, req.params.id))
       .orderBy(forumPostsTable.createdAt).limit(limit);
-    res.json(posts);
+    res.json(posts.map(serializePost));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -87,12 +97,11 @@ router.post("/community/threads/:id/posts", requireAuth, async (req, res) => {
       content,
     }).returning();
 
-    // Update post count and last activity
     await db.update(forumThreadsTable)
       .set({ postCount: sql`post_count + 1`, lastActivityAt: new Date() })
       .where(eq(forumThreadsTable.id, req.params.id));
 
-    res.status(201).json(post);
+    res.status(201).json(serializePost(post));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Internal Server Error" });

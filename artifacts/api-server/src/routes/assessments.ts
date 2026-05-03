@@ -48,8 +48,14 @@ router.get("/assessments", requireAuth, async (req, res) => {
   try {
     const { userId } = (req as AuthRequest).user;
     const limit = parseInt(req.query.limit as string) || 10;
+    const typeFilter = req.query.type as string | undefined;
+
+    const conditions = typeFilter
+      ? and(eq(assessmentsTable.userId, userId), eq(assessmentsTable.type, typeFilter as "DIMENSIONAL_SCAN" | "COHERENCE_AUDIT" | "IDENTITY_MAP" | "PHASE_TRANSITION"))
+      : eq(assessmentsTable.userId, userId);
+
     const list = await db.select().from(assessmentsTable)
-      .where(eq(assessmentsTable.userId, userId))
+      .where(conditions)
       .orderBy(desc(assessmentsTable.createdAt))
       .limit(limit);
     res.json(list);

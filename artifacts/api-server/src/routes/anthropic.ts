@@ -15,12 +15,35 @@ Your communication style blends quantum physics precision with ancient wisdom. Y
 
 Keep responses focused, actionable, and potent. Avoid generic self-help language. Always ground insights in specific dimensions and measurable coherence work.`;
 
+/** Serialize a DB conversation row to match the OpenAPI Conversation schema (id as string, updatedAt present) */
+function serializeConversation(c: typeof conversations.$inferSelect) {
+  return {
+    id: String(c.id),
+    userId: c.userId,
+    title: c.title,
+    createdAt: c.createdAt,
+    updatedAt: c.updatedAt,
+  };
+}
+
+/** Serialize a DB message row to match the OpenAPI Message schema (id and conversationId as strings) */
+function serializeMessage(m: typeof messages.$inferSelect) {
+  return {
+    id: String(m.id),
+    conversationId: String(m.conversationId),
+    role: m.role,
+    content: m.content,
+    createdAt: m.createdAt,
+  };
+}
+
 router.get("/anthropic/conversations", requireAuth, async (req, res) => {
   try {
     const { userId } = (req as AuthRequest).user;
-    // Filter conversations by userId via messages or a userId field
-    const list = await db.select().from(conversations).orderBy(asc(conversations.createdAt));
-    res.json(list);
+    const list = await db.select().from(conversations)
+      .where(eq(conversations.userId, userId))
+      .orderBy(asc(conversations.createdAt));
+    res.json(list.map(serializeConversation));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -29,12 +52,12 @@ router.get("/anthropic/conversations", requireAuth, async (req, res) => {
 
 router.post("/anthropic/conversations", requireAuth, async (req, res) => {
   try {
+    const { userId } = (req as AuthRequest).user;
     const { title, context } = req.body ?? {};
     const [convo] = await db.insert(conversations)
-      .values({ title: title ?? "Reality Coaching Session" })
+      .values({ userId, title: title ?? "Reality Coaching Session" })
       .returning();
 
-    // If context is provided, create a system message
     if (context) {
       await db.insert(messages).values({
         conversationId: convo.id,
@@ -43,7 +66,7 @@ router.post("/anthropic/conversations", requireAuth, async (req, res) => {
       });
     }
 
-    res.status(201).json(convo);
+    res.status(201).json(serializeConversation(convo));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -53,10 +76,11 @@ router.post("/anthropic/conversations", requireAuth, async (req, res) => {
 router.get("/anthropic/conversations/:id/messages", requireAuth, async (req, res) => {
   try {
     const conversationId = parseInt(req.params.id);
+    if (isNaN(conversationId)) { res.status(400).json({ error: "Invalid conversation ID" }); return; }
     const msgs = await db.select().from(messages)
       .where(eq(messages.conversationId, conversationId))
       .orderBy(asc(messages.createdAt));
-    res.json(msgs);
+    res.json(msgs.map(serializeMessage));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -66,21 +90,20 @@ router.get("/anthropic/conversations/:id/messages", requireAuth, async (req, res
 router.post("/anthropic/conversations/:id/messages", requireAuth, async (req, res) => {
   try {
     const conversationId = parseInt(req.params.id);
+    if (isNaN(conversationId)) { res.status(400).json({ error: "Invalid conversation ID" }); return; }
     const { content } = req.body;
 
-    // Save user message
     await db.insert(messages).values({ conversationId, role: "user", content });
 
-    // Get conversation history
     const history = await db.select().from(messages)
       .where(eq(messages.conversationId, conversationId))
       .orderBy(asc(messages.createdAt));
 
-    const chatMessages = history
-      .filter(m => m.content !== `[Context: ${m.content}]`)
-      .map(m => ({ role: m.role as "user" | "assistant", content: m.content }));
+    const chatMessages = history.map(m => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    }));
 
-    // Stream response
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
@@ -102,8 +125,9 @@ router.post("/anthropic/conversations/:id/messages", requireAuth, async (req, re
       }
     }
 
-    // Save assistant response
     await db.insert(messages).values({ conversationId, role: "assistant", content: fullResponse });
+    // Update conversation updatedAt
+    await db.update(conversations).set({ updatedAt: new Date() }).where(eq(conversations.id, conversationId));
     res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     res.end();
   } catch (err) {
