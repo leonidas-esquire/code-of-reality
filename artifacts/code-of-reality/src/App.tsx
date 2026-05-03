@@ -40,7 +40,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/onboarding" component={OnboardingPage} />
       <Route path="/billing/success" component={BillingSuccessPage} />
-      <Route path="/">
+      <Route path="/:path*">
         <Layout>
           <Switch>
             <Route path="/" component={DashboardPage} />
