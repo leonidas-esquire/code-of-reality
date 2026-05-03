@@ -41,11 +41,11 @@ pnpm workspace monorepo. All deployable apps live in `artifacts/`, shared code i
 ### 42 Chapters
 Fully seeded with opening paragraphs, summaries, quotables, and linked tools across all 8 phases.
 
-### Pages (14 total)
+### Pages (17 total)
 - `/` — Command Center dashboard (E₈ visualization background, reality metrics)
 - `/auth` — Sacred initiation login/register ("INITIALIZE SEQUENCE")
 - `/onboarding` — Multi-step dimensional assessment wizard
-- `/phases` — 8-phase journey map with phase gates
+- `/phases` — 8-phase journey map with phase gates + ARCHITECT badges on phases 5–8
 - `/chapters/:id` — Immersive chapter reading + reflection journal
 - `/assessment` — D3 radar chart dimensional scan tool
 - `/intentions` — Intention architecture + constellation view
@@ -54,8 +54,10 @@ Fully seeded with opening paragraphs, summaries, quotables, and linked tools acr
 - `/sessions` — Practice session logger + streak tracker
 - `/community` — Phase-gated forum threads and posts
 - `/analytics` — Transformation timeline + dimension trends (Recharts)
-- `/ai-coach` — Claude AI coach with streaming SSE responses
+- `/ai-coach` — Claude AI coach (PaywallGate: ARCHITECT required)
 - `/achievements` — Achievement gallery
+- `/pricing` — Sacred Geometric Futurism pricing page (ARCHITECT $49/mo, CERTIFIED $99/mo)
+- `/billing/success` — Post-checkout subscription sync page
 
 ### E₈ Visualization
 Pure HTML5 Canvas implementation (240 rotating roots with glow, bloom simulation, and edge detection). Replaces `@react-three/fiber` which is incompatible with React 19.
@@ -107,7 +109,36 @@ All routes under `/api/`:
 | Achievements | `GET /achievements` |
 | Community | Threads + posts + `GET /community/resonance` |
 | Analytics | `GET /analytics/dimensions`, `GET /analytics/summary` |
-| AI Coach | `GET/POST /anthropic/conversations`, `GET/POST /anthropic/conversations/:id/messages` (SSE streaming) |
+| AI Coach | `GET/POST /anthropic/conversations`, `GET/POST /anthropic/conversations/:id/messages` (SSE streaming) — requires ARCHITECT tier |
+| Billing | `GET /billing/products`, `GET /billing/subscription`, `POST /billing/checkout`, `POST /billing/portal`, `POST /billing/sync` |
+| Stripe Webhook | `POST /api/stripe/webhook` (raw Buffer — registered before express.json()) |
+
+---
+
+## Subscription Tiers & Paywall
+
+| Tier | Access | Price |
+|---|---|---|
+| FREE | Phases 1–4 (42 chapters of foundation content) | $0 |
+| ARCHITECT | Phases 5–8 + AI Reality Coach | $49/mo |
+| CERTIFIED | Everything + certification + masterminds + 1:1 sessions | $99/mo |
+
+Tier enforcement is server-side in three places:
+- `routes/phases.ts` — `GET /phases/current` + `POST /phases/:phase/advance` (blocks advancement to phase 5+ without ARCHITECT)
+- `routes/chapters.ts` — `GET /chapters/:id` + `POST /chapters/:id/complete` (blocks phase 5-8 content)
+- `routes/anthropic.ts` — all AI Coach endpoints require ARCHITECT+
+
+Frontend gates:
+- `/pricing` — Sacred Geometric pricing page with Stripe checkout
+- `components/paywall-gate.tsx` — wraps protected pages (currently: AI Coach)
+- Phases page shows ARCHITECT badge on phases 5–8 for FREE users
+- `/billing/success` — post-checkout sync page
+
+**STRIPE NOT YET CONNECTED** — The Replit Stripe integration was dismissed during setup. To activate payments:
+1. Go to the Integrations tab and connect Stripe (connector ID: `ccfg_stripe_01K611P4YQR0SZM11XFRQJC44Y`)
+2. Once connected, restart the API server — it will auto-run Stripe schema migrations and webhook setup
+3. Run `pnpm --filter @workspace/scripts run seed-products` to create ARCHITECT ($49/mo) and CERTIFIED ($99/mo) products in Stripe
+4. Alternatively, provide a `STRIPE_SECRET_KEY` env var if you prefer managing keys manually
 
 ---
 
