@@ -152,3 +152,41 @@
 .clip-corners {
   clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
 }
+
+/* ── Print / PDF styles ──────────────────────────────────────── */
+@media print {
+  /* Hide everything outside the guide content */
+  aside,
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Reset layout for print */
+  body {
+    background: #0a0a0f !important;
+    color: #e8e4d8 !important;
+    font-size: 11pt;
+  }
+
+  main {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Avoid page breaks inside key blocks */
+  .print-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Ensure links print as plain text */
+  a[href]::after {
+    content: none !important;
+  }
+
+  /* Keep sacred border visible in print */
+  .sacred-border {
+    border: 1px solid rgba(212,175,55,0.3) !important;
+  }
+}

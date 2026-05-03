@@ -1,6 +1,6 @@
 import { useGetAnalyticsSummary, useGetCurrentVector } from "@workspace/api-client-react";
 import { E8Visualization } from "@/components/e8-visualization";
-import { Hexagon, Activity, Network, Target } from "lucide-react";
+import { Hexagon, Activity, Network, Target, FileText } from "lucide-react";
 import { Link } from "wouter";
 
 export default function DashboardPage() {
@@ -87,6 +87,21 @@ export default function DashboardPage() {
               <Link href="/journal" className="flex flex-col items-center justify-center p-4 border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary transition-colors clip-corners">
                 <Activity className="w-6 h-6 mb-2" />
                 <span className="font-mono text-[10px] uppercase tracking-wider text-center">Log Session</span>
+              </Link>
+              <Link
+                href="/guide"
+                className="col-span-2 flex items-center justify-center gap-3 p-4 transition-colors clip-corners"
+                style={{
+                  border: "1px solid rgba(212,175,55,0.4)",
+                  background: "rgba(212,175,55,0.07)",
+                  color: "#d4af37",
+                }}
+              >
+                <FileText className="w-5 h-5 flex-shrink-0" />
+                <div className="text-left">
+                  <div className="font-mono text-[10px] uppercase tracking-widest">Platform User Guide</div>
+                  <div className="font-mono text-[9px] uppercase tracking-wider opacity-60 mt-0.5">Read online or download PDF</div>
+                </div>
               </Link>
             </div>
           </div>

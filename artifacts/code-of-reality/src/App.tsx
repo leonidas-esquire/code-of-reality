@@ -23,6 +23,7 @@ import AiCoachPage from "@/pages/ai-coach";
 import AchievementsPage from "@/pages/achievements";
 import PricingPage from "@/pages/pricing";
 import BillingSuccessPage from "@/pages/billing-success";
+import GuidePage from "@/pages/guide";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,6 +56,7 @@ function Router() {
             <Route path="/ai-coach" component={AiCoachPage} />
             <Route path="/achievements" component={AchievementsPage} />
             <Route path="/pricing" component={PricingPage} />
+            <Route path="/guide" component={GuidePage} />
             <Route component={NotFound} />
           </Switch>
         </Layout>
