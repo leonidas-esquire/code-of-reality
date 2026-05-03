@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, Download, Hexagon, Lock, BookOpen } from "lucide-react";
 
@@ -14,6 +14,29 @@ const TOC_ITEMS = [
   { id: "faq",                label: "FAQ",                       short: "FAQ" },
   { id: "glossary",           label: "Glossary",                  short: "Glossary" },
 ];
+
+function useScrollProgress(containerRef: React.RefObject<HTMLDivElement | null>) {
+  const [progress, setProgress] = useState(0);
+
+  const update = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const { top, height } = el.getBoundingClientRect();
+    const viewH = window.innerHeight;
+    const scrollable = height - viewH;
+    if (scrollable <= 0) { setProgress(100); return; }
+    const scrolled = Math.max(0, -top);
+    setProgress(Math.min(100, (scrolled / scrollable) * 100));
+  }, [containerRef]);
+
+  useEffect(() => {
+    window.addEventListener("scroll", update, { passive: true });
+    update();
+    return () => window.removeEventListener("scroll", update);
+  }, [update]);
+
+  return progress;
+}
 
 function useActiveSection(ids: string[]) {
   const [active, setActive] = useState(ids[0]);
@@ -196,11 +219,29 @@ function PhaseBlock({
 export default function GuidePage() {
   const [, setLocation] = useLocation();
   const active = useActiveSection(TOC_ITEMS.map((t) => t.id));
+  const containerRef = useRef<HTMLDivElement>(null);
+  const progress = useScrollProgress(containerRef);
 
   const handleDownload = () => window.print();
 
   return (
     <>
+      {/* Reading progress bar — fixed at top, hidden on print */}
+      <div
+        className="print:hidden fixed top-0 right-0 z-50 h-[2px] transition-all duration-75 ease-out"
+        style={{
+          left: "16rem",
+          width: `calc((100% - 16rem) * ${progress / 100})`,
+          background: `linear-gradient(to right, ${GOLD}80, ${GOLD}, #fff8dc)`,
+          boxShadow: `0 0 8px ${GOLD}90`,
+        }}
+      />
+      {/* Faint track line */}
+      <div
+        className="print:hidden fixed top-0 right-0 z-49 h-[1px]"
+        style={{ left: "16rem", background: `${GOLD}15` }}
+      />
+
       {/* Print-only header */}
       <div className="hidden print:flex items-center justify-center mb-12 pt-8">
         <Hexagon className="w-8 h-8 mr-4" style={{ color: GOLD }} />
@@ -215,7 +256,7 @@ export default function GuidePage() {
       </div>
 
       {/* Outer wrapper: wider than normal to accommodate TOC */}
-      <div className="max-w-6xl mx-auto">
+      <div ref={containerRef} className="max-w-6xl mx-auto">
 
         {/* Top bar: back + download */}
         <div className="print:hidden flex items-center justify-between mb-10">
