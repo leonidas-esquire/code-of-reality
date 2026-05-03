@@ -1,8 +1,38 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
+import authRouter from "./auth";
+import usersRouter from "./users";
+import assessmentsRouter from "./assessments";
+import vectorsRouter from "./vectors";
+import patternsRouter from "./patterns";
+import intentionsRouter from "./intentions";
+import identityRouter from "./identity";
+import chaptersRouter from "./chapters";
+import phasesRouter from "./phases";
+import journalRouter from "./journal";
+import sessionsRouter from "./sessions";
+import achievementsRouter from "./achievements";
+import communityRouter from "./community";
+import analyticsRouter from "./analytics";
+import anthropicRouter from "./anthropic";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(authRouter);
+router.use(usersRouter);
+router.use(assessmentsRouter);
+router.use(vectorsRouter);
+router.use(patternsRouter);
+router.use(intentionsRouter);
+router.use(identityRouter);
+router.use(chaptersRouter);
+router.use(phasesRouter);
+router.use(journalRouter);
+router.use(sessionsRouter);
+router.use(achievementsRouter);
+router.use(communityRouter);
+router.use(analyticsRouter);
+router.use(anthropicRouter);
 
 export default router;

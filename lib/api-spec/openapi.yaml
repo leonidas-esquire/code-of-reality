@@ -1,22 +1,34 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Code of Reality Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: users
+  - name: assessments
+  - name: vectors
+  - name: patterns
+  - name: intentions
+  - name: identity
+  - name: chapters
+  - name: phases
+  - name: journal
+  - name: sessions
+  - name: achievements
+  - name: community
+  - name: analytics
+  - name: anthropic
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +36,1915 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── USERS ──────────────────────────────────────────────────────────────────
+  /users/me:
+    get:
+      operationId: getCurrentUser
+      tags: [users]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      operationId: updateCurrentUser
+      tags: [users]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserBody"
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /users/me/onboarding:
+    post:
+      operationId: completeOnboarding
+      tags: [users]
+      summary: Mark onboarding complete
+      responses:
+        "200":
+          description: Onboarding completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  # ── AUTH ───────────────────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [users]
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [users]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Auth token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags: [users]
+      summary: Logout user
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # ── ASSESSMENTS ────────────────────────────────────────────────────────────
+  /assessments:
+    get:
+      operationId: listAssessments
+      tags: [assessments]
+      summary: List user assessments
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [DIMENSIONAL_SCAN, COHERENCE_AUDIT, IDENTITY_MAP, PHASE_TRANSITION]
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Assessment list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Assessment"
+    post:
+      operationId: submitAssessment
+      tags: [assessments]
+      summary: Submit a dimensional assessment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitAssessmentBody"
+      responses:
+        "201":
+          description: Assessment result with reality vector
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentResult"
+
+  /assessments/latest:
+    get:
+      operationId: getLatestAssessment
+      tags: [assessments]
+      summary: Get user's latest assessment
+      responses:
+        "200":
+          description: Latest assessment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentResult"
+
+  /assessments/{id}:
+    get:
+      operationId: getAssessment
+      tags: [assessments]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Assessment details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentResult"
+
+  # ── REALITY VECTORS ────────────────────────────────────────────────────────
+  /vectors:
+    get:
+      operationId: listRealityVectors
+      tags: [vectors]
+      summary: Get user's reality vector history
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Reality vector history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RealityVector"
+
+  /vectors/current:
+    get:
+      operationId: getCurrentVector
+      tags: [vectors]
+      summary: Get user's current reality vector
+      responses:
+        "200":
+          description: Current reality vector
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RealityVector"
+
+  /vectors/trajectory:
+    get:
+      operationId: getVectorTrajectory
+      tags: [vectors]
+      summary: Get reality vector trajectory over time
+      responses:
+        "200":
+          description: Vector trajectory data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VectorTrajectory"
+
+  # ── PATTERN LOCKS ──────────────────────────────────────────────────────────
+  /patterns:
+    get:
+      operationId: listPatternLocks
+      tags: [patterns]
+      summary: List user's pattern locks
+      responses:
+        "200":
+          description: Pattern locks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PatternLock"
+
+  /patterns/{id}/status:
+    put:
+      operationId: updatePatternLockStatus
+      tags: [patterns]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePatternBody"
+      responses:
+        "200":
+          description: Updated pattern lock
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatternLock"
+
+  # ── INTENTIONS ─────────────────────────────────────────────────────────────
+  /intentions:
+    get:
+      operationId: listIntentions
+      tags: [intentions]
+      summary: List user's active intentions
+      responses:
+        "200":
+          description: Intentions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Intention"
+    post:
+      operationId: createIntention
+      tags: [intentions]
+      summary: Create a new intention
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateIntentionBody"
+      responses:
+        "201":
+          description: Created intention
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Intention"
+
+  /intentions/{id}:
+    get:
+      operationId: getIntention
+      tags: [intentions]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Intention details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Intention"
+    put:
+      operationId: updateIntention
+      tags: [intentions]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateIntentionBody"
+      responses:
+        "200":
+          description: Updated intention
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Intention"
+    delete:
+      operationId: deleteIntention
+      tags: [intentions]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /intentions/{id}/crystallize:
+    post:
+      operationId: crystallizeIntention
+      tags: [intentions]
+      summary: Crystallize an intention (deepen precision)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CrystallizeBody"
+      responses:
+        "200":
+          description: Crystallized intention
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Intention"
+
+  /constellations:
+    get:
+      operationId: listConstellations
+      tags: [intentions]
+      summary: List intention constellations
+      responses:
+        "200":
+          description: Constellations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IntentionConstellation"
+    post:
+      operationId: createConstellation
+      tags: [intentions]
+      summary: Create an intention constellation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConstellationBody"
+      responses:
+        "201":
+          description: Created constellation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntentionConstellation"
+
+  /constellations/{id}:
+    get:
+      operationId: getConstellation
+      tags: [intentions]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Constellation details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntentionConstellation"
+
+  # ── IDENTITY GEOMETRY ──────────────────────────────────────────────────────
+  /identity:
+    get:
+      operationId: getIdentityGeometry
+      tags: [identity]
+      summary: Get user's identity geometry
+      responses:
+        "200":
+          description: Identity geometry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentityGeometry"
+    post:
+      operationId: submitIdentityAssessment
+      tags: [identity]
+      summary: Submit identity assessment responses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitIdentityBody"
+      responses:
+        "201":
+          description: Identity geometry result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentityGeometry"
+
+  /identity/coherence-audit:
+    get:
+      operationId: getCoherenceAudit
+      tags: [identity]
+      summary: Run coherence audit comparing identity to intentions
+      responses:
+        "200":
+          description: Coherence audit result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoherenceAudit"
+
+  # ── CHAPTERS ───────────────────────────────────────────────────────────────
+  /chapters:
+    get:
+      operationId: listChapters
+      tags: [chapters]
+      summary: List chapters (phase-gated by user's current phase)
+      parameters:
+        - in: query
+          name: phase
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Chapter list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Chapter"
+
+  /chapters/{id}:
+    get:
+      operationId: getChapter
+      tags: [chapters]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Chapter content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chapter"
+
+  /chapters/{id}/complete:
+    post:
+      operationId: markChapterComplete
+      tags: [chapters]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompleteChapterBody"
+      responses:
+        "200":
+          description: Progress updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChapterProgress"
+
+  /chapters/progress:
+    get:
+      operationId: getAllChapterProgress
+      tags: [chapters]
+      summary: Get all chapter reading progress
+      responses:
+        "200":
+          description: Chapter progress list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChapterProgress"
+
+  # ── PHASES ─────────────────────────────────────────────────────────────────
+  /phases:
+    get:
+      operationId: listPhases
+      tags: [phases]
+      summary: Get all phases with user completion status
+      responses:
+        "200":
+          description: Phase list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Phase"
+
+  /phases/current:
+    get:
+      operationId: getCurrentPhase
+      tags: [phases]
+      summary: Get user's current phase details and requirements
+      responses:
+        "200":
+          description: Current phase with progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhaseProgress"
+
+  /phases/{phase}/advance:
+    post:
+      operationId: advancePhase
+      tags: [phases]
+      summary: Attempt to advance to next phase
+      parameters:
+        - in: path
+          name: phase
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Phase advancement result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhaseAdvanceResult"
+
+  # ── JOURNAL ────────────────────────────────────────────────────────────────
+  /journal:
+    get:
+      operationId: listJournalEntries
+      tags: [journal]
+      summary: List journal entries
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+        - in: query
+          name: linkedChapterId
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Journal entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JournalEntry"
+    post:
+      operationId: createJournalEntry
+      tags: [journal]
+      summary: Create a journal entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJournalBody"
+      responses:
+        "201":
+          description: Created entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntry"
+
+  /journal/{id}:
+    put:
+      operationId: updateJournalEntry
+      tags: [journal]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateJournalBody"
+      responses:
+        "200":
+          description: Updated entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntry"
+    delete:
+      operationId: deleteJournalEntry
+      tags: [journal]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # ── SESSIONS (PRACTICE) ────────────────────────────────────────────────────
+  /sessions:
+    get:
+      operationId: listSessions
+      tags: [sessions]
+      summary: List practice sessions
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Session list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+    post:
+      operationId: logSession
+      tags: [sessions]
+      summary: Log a completed practice session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogSessionBody"
+      responses:
+        "201":
+          description: Session logged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+
+  /sessions/stats:
+    get:
+      operationId: getSessionStats
+      tags: [sessions]
+      summary: Get practice session statistics
+      responses:
+        "200":
+          description: Session stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionStats"
+
+  # ── ACHIEVEMENTS ───────────────────────────────────────────────────────────
+  /achievements:
+    get:
+      operationId: listAchievements
+      tags: [achievements]
+      summary: List user achievements
+      responses:
+        "200":
+          description: Achievement list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AchievementList"
+
+  # ── COMMUNITY ──────────────────────────────────────────────────────────────
+  /community/threads:
+    get:
+      operationId: listThreads
+      tags: [community]
+      summary: List forum threads (phase-filtered)
+      parameters:
+        - in: query
+          name: phase
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Thread list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ForumThread"
+    post:
+      operationId: createThread
+      tags: [community]
+      summary: Create a forum thread
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateThreadBody"
+      responses:
+        "201":
+          description: Created thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForumThread"
+
+  /community/threads/{id}/posts:
+    get:
+      operationId: listThreadPosts
+      tags: [community]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Posts in thread
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ForumPost"
+    post:
+      operationId: createPost
+      tags: [community]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePostBody"
+      responses:
+        "201":
+          description: Created post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForumPost"
+
+  /community/resonance:
+    get:
+      operationId: getPlanetaryResonance
+      tags: [community]
+      summary: Get planetary resonance metrics (collective consciousness)
+      responses:
+        "200":
+          description: Collective resonance data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlanetaryResonance"
+
+  # ── ANALYTICS ──────────────────────────────────────────────────────────────
+  /analytics/dimensions:
+    get:
+      operationId: getDimensionalTimeline
+      tags: [analytics]
+      summary: Get dimensional score timeline
+      parameters:
+        - in: query
+          name: days
+          schema:
+            type: integer
+            default: 90
+      responses:
+        "200":
+          description: Dimensional timeline data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DimensionalTimeline"
+
+  /analytics/summary:
+    get:
+      operationId: getAnalyticsSummary
+      tags: [analytics]
+      summary: Get overall transformation analytics summary
+      responses:
+        "200":
+          description: Analytics summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsSummary"
+
+  # ── ANTHROPIC AI COACH ─────────────────────────────────────────────────────
+  /anthropic/conversations:
+    get:
+      operationId: listAnthropicConversations
+      tags: [anthropic]
+      summary: List AI coach conversations
+      responses:
+        "200":
+          description: Conversation list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conversation"
+    post:
+      operationId: createAnthropicConversation
+      tags: [anthropic]
+      summary: Create a new AI coach conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConversationBody"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+
+  /anthropic/conversations/{id}/messages:
+    get:
+      operationId: getAnthropicMessages
+      tags: [anthropic]
+      summary: Get messages in a conversation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+    post:
+      operationId: sendAnthropicMessage
+      tags: [anthropic]
+      summary: Send message to AI coach (streaming SSE)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendAnthropicMessageBody"
+      responses:
+        "200":
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
 components:
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
   schemas:
     HealthStatus:
       type: object
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required: [error]
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    # ── AUTH ────────────────────────────────────────────────────────────────
+    RegisterBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        displayName:
+          type: string
+      required: [email, password]
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required: [email, password]
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserProfile"
+      required: [token, user]
+
+    # ── USER ────────────────────────────────────────────────────────────────
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          nullable: true
+        currentPhase:
+          type: integer
+        onboardingDone:
+          type: boolean
+        subscriptionTier:
+          type: string
+          enum: [FREE, EXPLORER, ARCHITECT, CERTIFIED]
+        streakDays:
+          type: integer
+        totalSessions:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, email, currentPhase, onboardingDone, subscriptionTier, streakDays, totalSessions, createdAt]
+
+    UpdateUserBody:
+      type: object
+      properties:
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+
+    # ── ASSESSMENT ──────────────────────────────────────────────────────────
+    DimensionScores:
+      type: object
+      description: Map of dimension index (0-7) to score (1-10)
+      properties:
+        spatial:
+          type: number
+        temporal:
+          type: number
+        causal:
+          type: number
+        intentional:
+          type: number
+        identity:
+          type: number
+        emotional:
+          type: number
+        mental:
+          type: number
+        transcendent:
+          type: number
+      required: [spatial, temporal, causal, intentional, identity, emotional, mental, transcendent]
+
+    SubmitAssessmentBody:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [DIMENSIONAL_SCAN, COHERENCE_AUDIT, IDENTITY_MAP, PHASE_TRANSITION]
+        dimensionScores:
+          $ref: "#/components/schemas/DimensionScores"
+        responses:
+          type: array
+          items:
+            type: object
+            properties:
+              questionId:
+                type: string
+              score:
+                type: number
+              response:
+                type: string
+            required: [questionId, score]
+        phase:
+          type: integer
+      required: [type, dimensionScores]
+
+    Assessment:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [DIMENSIONAL_SCAN, COHERENCE_AUDIT, IDENTITY_MAP, PHASE_TRANSITION]
+        dimensionScores:
+          $ref: "#/components/schemas/DimensionScores"
+        overallScore:
+          type: number
+        phase:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, type, dimensionScores, overallScore, phase, createdAt]
+
+    AssessmentResult:
+      type: object
+      properties:
+        assessment:
+          $ref: "#/components/schemas/Assessment"
+        realityVector:
+          $ref: "#/components/schemas/RealityVector"
+        patternLocks:
+          type: array
+          items:
+            $ref: "#/components/schemas/PatternLock"
+        insights:
+          type: array
+          items:
+            type: string
+      required: [assessment, realityVector, patternLocks, insights]
+
+    # ── REALITY VECTOR ────────────────────────────────────────────────────────
+    RealityVector:
+      type: object
+      properties:
+        id:
+          type: string
+        components:
+          type: array
+          items:
+            type: number
+          minItems: 8
+          maxItems: 8
+        magnitude:
+          type: number
+        direction:
+          type: array
+          items:
+            type: number
+        trajectory:
+          type: array
+          items:
+            type: number
+        stability:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, components, magnitude, direction, trajectory, stability, createdAt]
+
+    VectorTrajectory:
+      type: object
+      properties:
+        vectors:
+          type: array
+          items:
+            $ref: "#/components/schemas/RealityVector"
+        trend:
+          type: string
+          enum: [ascending, descending, stable, volatile]
+        overallGrowth:
+          type: number
+        dimensionTrends:
+          type: object
+          additionalProperties:
+            type: number
+      required: [vectors, trend, overallGrowth, dimensionTrends]
+
+    # ── PATTERN LOCK ──────────────────────────────────────────────────────────
+    PatternLock:
+      type: object
+      properties:
+        id:
+          type: string
+        dimension:
+          type: integer
+        dimensionName:
+          type: string
+        description:
+          type: string
+        severity:
+          type: number
+        status:
+          type: string
+          enum: [LOCKED, UNLOCKING, RESOLVED]
+        timelineOrigin:
+          type: string
+          nullable: true
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, dimension, dimensionName, description, severity, status, createdAt]
+
+    UpdatePatternBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [LOCKED, UNLOCKING, RESOLVED]
+        timelineOrigin:
+          type: string
+      required: [status]
+
+    # ── INTENTION ─────────────────────────────────────────────────────────────
+    Intention:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+          enum: [wealth, health, relationships, purpose, creativity, spiritual]
+        targetVector:
+          type: array
+          items:
+            type: number
+        crystallizationScore:
+          type: number
+        standingWaveStrength:
+          type: number
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, title, category, targetVector, crystallizationScore, standingWaveStrength, isActive, createdAt, updatedAt]
+
+    CreateIntentionBody:
+      type: object
+      properties:
+        title:
+          type: string
+        category:
+          type: string
+          enum: [wealth, health, relationships, purpose, creativity, spiritual]
+        dimensionTargets:
+          $ref: "#/components/schemas/DimensionScores"
+        description:
+          type: string
+      required: [title, category, dimensionTargets]
+
+    UpdateIntentionBody:
+      type: object
+      properties:
+        title:
+          type: string
+        category:
+          type: string
+        isActive:
+          type: boolean
+
+    CrystallizeBody:
+      type: object
+      properties:
+        refinements:
+          type: array
+          items:
+            type: object
+            properties:
+              dimension:
+                type: string
+              targetScore:
+                type: number
+              reason:
+                type: string
+            required: [dimension, targetScore]
+      required: [refinements]
+
+    IntentionConstellation:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        harmonicScore:
+          type: number
+        interferenceScore:
+          type: number
+        intentions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Intention"
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, harmonicScore, interferenceScore, intentions, createdAt]
+
+    CreateConstellationBody:
+      type: object
+      properties:
+        name:
+          type: string
+        intentionIds:
+          type: array
+          items:
+            type: string
+      required: [name, intentionIds]
+
+    # ── IDENTITY GEOMETRY ────────────────────────────────────────────────────
+    IdentityGeometry:
+      type: object
+      properties:
+        id:
+          type: string
+        dimensionalScores:
+          type: array
+          items:
+            type: number
+          minItems: 8
+          maxItems: 8
+        coherenceScore:
+          type: number
+        shapeType:
+          type: string
+        coherenceGaps:
+          type: array
+          items:
+            $ref: "#/components/schemas/CoherenceGap"
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, dimensionalScores, coherenceScore, shapeType, coherenceGaps, createdAt]
+
+    CoherenceGap:
+      type: object
+      properties:
+        dimension:
+          type: integer
+        dimensionName:
+          type: string
+        identityScore:
+          type: number
+        intentionScore:
+          type: number
+        gapMagnitude:
+          type: number
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        remediationChapter:
+          type: integer
+      required: [dimension, dimensionName, identityScore, intentionScore, gapMagnitude, severity]
+
+    SubmitIdentityBody:
+      type: object
+      properties:
+        responses:
+          type: array
+          items:
+            type: object
+            properties:
+              questionId:
+                type: string
+              response:
+                type: string
+              dimensionWeights:
+                type: object
+                additionalProperties:
+                  type: number
+            required: [questionId, response]
+      required: [responses]
+
+    CoherenceAudit:
+      type: object
+      properties:
+        overallCoherenceScore:
+          type: number
+        gaps:
+          type: array
+          items:
+            $ref: "#/components/schemas/CoherenceGap"
+        identityGeometry:
+          $ref: "#/components/schemas/IdentityGeometry"
+        totalGaps:
+          type: integer
+        criticalGaps:
+          type: integer
+        auditDate:
+          type: string
+          format: date-time
+      required: [overallCoherenceScore, gaps, totalGaps, criticalGaps, auditDate]
+
+    # ── CHAPTER ──────────────────────────────────────────────────────────────
+    Chapter:
+      type: object
+      properties:
+        id:
+          type: string
+        phase:
+          type: integer
+        sequence:
+          type: integer
+        title:
+          type: string
+        openingParagraph:
+          type: string
+        summary:
+          type: string
+        quotables:
+          type: array
+          items:
+            type: string
+        linkedToolIds:
+          type: array
+          items:
+            type: string
+        isUnlocked:
+          type: boolean
+        progress:
+          $ref: "#/components/schemas/ChapterProgress"
+          nullable: true
+      required: [id, phase, sequence, title, openingParagraph, summary, quotables, linkedToolIds, isUnlocked]
+
+    ChapterProgress:
+      type: object
+      properties:
+        chapterId:
+          type: string
+        isComplete:
+          type: boolean
+        assessmentScore:
+          type: number
+          nullable: true
+        reflectionSubmitted:
+          type: boolean
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastReadAt:
+          type: string
+          format: date-time
+          nullable: true
+      required: [chapterId, isComplete, reflectionSubmitted]
+
+    CompleteChapterBody:
+      type: object
+      properties:
+        assessmentScore:
+          type: number
+        reflectionText:
+          type: string
+      required: [assessmentScore]
+
+    # ── PHASE ────────────────────────────────────────────────────────────────
+    Phase:
+      type: object
+      properties:
+        phase:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        chapterRange:
+          type: array
+          items:
+            type: integer
+          minItems: 2
+          maxItems: 2
+        unlockedTools:
+          type: array
+          items:
+            type: string
+        isCompleted:
+          type: boolean
+        isUnlocked:
+          type: boolean
+      required: [phase, name, description, chapterRange, unlockedTools, isCompleted, isUnlocked]
+
+    PhaseProgress:
+      type: object
+      properties:
+        currentPhase:
+          type: integer
+        phaseName:
+          type: string
+        chaptersCompleted:
+          type: integer
+        chaptersRequired:
+          type: integer
+        toolSessionsCompleted:
+          type: integer
+        toolSessionsRequired:
+          type: integer
+        practiceSessionsCompleted:
+          type: integer
+        practiceSessionsRequired:
+          type: integer
+        reflectionSubmitted:
+          type: boolean
+        canAdvance:
+          type: boolean
+        percentComplete:
+          type: number
+        missingRequirements:
+          type: array
+          items:
+            type: string
+      required: [currentPhase, phaseName, chaptersCompleted, chaptersRequired, toolSessionsCompleted, toolSessionsRequired, practiceSessionsCompleted, practiceSessionsRequired, reflectionSubmitted, canAdvance, percentComplete, missingRequirements]
+
+    PhaseAdvanceResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        newPhase:
+          type: integer
+          nullable: true
+        message:
+          type: string
+        missingRequirements:
+          type: array
+          items:
+            type: string
+      required: [success, message, missingRequirements]
+
+    # ── JOURNAL ──────────────────────────────────────────────────────────────
+    JournalEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        linkedChapterId:
+          type: string
+          nullable: true
+        linkedTool:
+          type: string
+          nullable: true
+        sentimentScore:
+          type: number
+          nullable: true
+        prompt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, content, tags, createdAt, updatedAt]
+
+    CreateJournalBody:
+      type: object
+      properties:
+        content:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        linkedChapterId:
+          type: string
+        linkedTool:
+          type: string
+        prompt:
+          type: string
+      required: [content]
+
+    UpdateJournalBody:
+      type: object
+      properties:
+        content:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    # ── SESSION ──────────────────────────────────────────────────────────────
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [reading, practice, tool, group, scanner, crystallizer, echo_field, identity_mapping]
+        durationMinutes:
+          type: integer
+        phase:
+          type: integer
+        preScore:
+          type: number
+          nullable: true
+        postScore:
+          type: number
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, type, durationMinutes, phase, createdAt]
+
+    LogSessionBody:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [reading, practice, tool, group, scanner, crystallizer, echo_field, identity_mapping]
+        durationMinutes:
+          type: integer
+        phase:
+          type: integer
+        preScore:
+          type: number
+        postScore:
+          type: number
+        notes:
+          type: string
+      required: [type, durationMinutes, phase]
+
+    SessionStats:
+      type: object
+      properties:
+        totalSessions:
+          type: integer
+        totalMinutes:
+          type: integer
+        currentStreakDays:
+          type: integer
+        longestStreakDays:
+          type: integer
+        sessionsByType:
+          type: object
+          additionalProperties:
+            type: integer
+        avgPrePostImprovement:
+          type: number
+        weeklyFrequency:
+          type: number
+      required: [totalSessions, totalMinutes, currentStreakDays, longestStreakDays, sessionsByType, avgPrePostImprovement, weeklyFrequency]
+
+    # ── ACHIEVEMENTS ─────────────────────────────────────────────────────────
+    Achievement:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        iconType:
+          type: string
+        earnedAt:
+          type: string
+          format: date-time
+          nullable: true
+        isEarned:
+          type: boolean
+      required: [id, type, name, description, iconType, isEarned]
+
+    AchievementList:
+      type: object
+      properties:
+        earned:
+          type: array
+          items:
+            $ref: "#/components/schemas/Achievement"
+        available:
+          type: array
+          items:
+            $ref: "#/components/schemas/Achievement"
+        totalPoints:
+          type: integer
+      required: [earned, available, totalPoints]
+
+    # ── COMMUNITY ────────────────────────────────────────────────────────────
+    ForumThread:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        phase:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+        authorId:
+          type: string
+        authorName:
+          type: string
+        postCount:
+          type: integer
+        lastActivityAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, title, phase, tags, authorId, authorName, postCount, createdAt]
+
+    ForumPost:
+      type: object
+      properties:
+        id:
+          type: string
+        threadId:
+          type: string
+        content:
+          type: string
+        authorId:
+          type: string
+        authorName:
+          type: string
+        authorPhase:
+          type: integer
+        likes:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, threadId, content, authorId, authorName, authorPhase, likes, createdAt]
+
+    CreateThreadBody:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+      required: [title, content]
+
+    CreatePostBody:
+      type: object
+      properties:
+        content:
+          type: string
+      required: [content]
+
+    PlanetaryResonance:
+      type: object
+      properties:
+        totalActiveUsers:
+          type: integer
+        avgCoherenceScore:
+          type: number
+        avgDimensionScores:
+          $ref: "#/components/schemas/DimensionScores"
+        collectivePhaseDistribution:
+          type: object
+          additionalProperties:
+            type: integer
+        resonanceLevel:
+          type: string
+          enum: [low, growing, resonant, transcendent]
+        updatedAt:
+          type: string
+          format: date-time
+      required: [totalActiveUsers, avgCoherenceScore, avgDimensionScores, collectivePhaseDistribution, resonanceLevel, updatedAt]
+
+    # ── ANALYTICS ────────────────────────────────────────────────────────────
+    DimensionalTimeline:
+      type: object
+      properties:
+        dataPoints:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date-time
+              scores:
+                $ref: "#/components/schemas/DimensionScores"
+              overallScore:
+                type: number
+            required: [date, scores, overallScore]
+        dimensionLabels:
+          type: array
+          items:
+            type: string
+        phaseTransitions:
+          type: array
+          items:
+            type: object
+            properties:
+              phase:
+                type: integer
+              date:
+                type: string
+                format: date-time
+            required: [phase, date]
+      required: [dataPoints, dimensionLabels, phaseTransitions]
+
+    AnalyticsSummary:
+      type: object
+      properties:
+        currentPhase:
+          type: integer
+        overallCoherenceScore:
+          type: number
+        dimensionScores:
+          $ref: "#/components/schemas/DimensionScores"
+        vectorMagnitude:
+          type: number
+        patternLocksResolved:
+          type: integer
+        patternLocksTotal:
+          type: integer
+        intentionsActive:
+          type: integer
+        constellationHarmony:
+          type: number
+        practiceStreak:
+          type: integer
+        totalTransformationScore:
+          type: number
+      required: [currentPhase, overallCoherenceScore, dimensionScores, vectorMagnitude, patternLocksResolved, patternLocksTotal, intentionsActive, constellationHarmony, practiceStreak, totalTransformationScore]
+
+    # ── ANTHROPIC ────────────────────────────────────────────────────────────
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, createdAt, updatedAt]
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+        conversationId:
+          type: string
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, conversationId, role, content, createdAt]
+
+    CreateConversationBody:
+      type: object
+      properties:
+        title:
+          type: string
+        context:
+          type: string
+          description: Optional context (current phase, scores, etc.)
+
+    SendAnthropicMessageBody:
+      type: object
+      properties:
+        content:
+          type: string
+      required: [content]
